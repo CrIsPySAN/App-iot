@@ -4,7 +4,37 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
-import { Mail, Lock, ArrowRight, Loader, User, Leaf, Sun, Droplets, Thermometer, Check } from "lucide-react"
+import {
+    Mail,
+    Lock,
+    ArrowRight,
+    Loader,
+    User,
+    Leaf,
+    Sun,
+    Droplets,
+    Thermometer,
+    Check,
+    CheckCircle,
+    AlertCircle,
+    XCircle,
+    Info,
+    X,
+    Eye,
+    EyeOff,
+} from "lucide-react"
+
+// Tipo para las alertas
+type AlertType = "success" | "error" | "warning" | "info"
+
+// Interfaz para las alertas
+interface Alert {
+    id: string
+    type: AlertType
+    title: string
+    message: string
+    exiting?: boolean
+}
 
 const RegisterForm: React.FC = () => {
     const navigate = useNavigate()
@@ -14,6 +44,8 @@ const RegisterForm: React.FC = () => {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const [activeIcon, setActiveIcon] = useState(0)
+    const [alerts, setAlerts] = useState<Alert[]>([])
+    const [showPassword, setShowPassword] = useState(false)
 
     // Rotate through icons for animation effect
     useEffect(() => {
@@ -23,8 +55,54 @@ const RegisterForm: React.FC = () => {
         return () => clearInterval(interval)
     }, [])
 
+    // Función para mostrar alertas
+    const showAlert = (type: AlertType, title: string, message: string) => {
+        const id = Date.now().toString()
+        setAlerts((prev) => [...prev, { id, type, title, message }])
+
+        // Eliminar la alerta después de 5 segundos
+        setTimeout(() => {
+            removeAlert(id)
+        }, 5000)
+    }
+
+    // Función para eliminar alertas
+    const removeAlert = (id: string) => {
+        // Primero añadimos la clase de salida para la animación
+        setAlerts((prev) => prev.map((alert) => (alert.id === id ? { ...alert, exiting: true } : alert)))
+
+        // Después de la animación, eliminamos la alerta
+        setTimeout(() => {
+            setAlerts((prev) => prev.filter((alert) => alert.id !== id))
+        }, 300)
+    }
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Validación de contraseña
+        if (!hasMinLength || !hasUpperCase || !hasNumber || !hasSpecialChar) {
+            showAlert(
+                "warning",
+                "Contraseña débil",
+                "Por favor, asegúrate de cumplir con todos los requisitos de seguridad para la contraseña.",
+            )
+
+            // Marcar el campo de contraseña con error
+            document.getElementById("password")?.classList.add("input-error")
+
+            // Quitar la clase de error después de 3 segundos
+            setTimeout(() => {
+                document.getElementById("password")?.classList.remove("input-error")
+            }, 3000)
+
+            return
+        }
+
         setLoading(true)
         setError("")
 
@@ -36,10 +114,40 @@ const RegisterForm: React.FC = () => {
             })
 
             if (response.status === 201) {
-                navigate("/")
+                // Mostrar alerta de éxito
+                showAlert(
+                    "success",
+                    "¡Registro exitoso!",
+                    "Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.",
+                )
+
+                // Redirigir después de un breve retraso para que el usuario vea la alerta
+                setTimeout(() => {
+                    navigate("/login")
+                }, 2000)
             }
-        } catch (err) {
-            setError("Error al registrar el usuario. Intenta nuevamente.")
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.error || "Error al registrar el usuario. Intenta nuevamente."
+            setError(errorMessage)
+
+            // Mostrar alerta de error
+            if (errorMessage.includes("already registered")) {
+                // Añadir clase de error al input de email
+                document.getElementById("email")?.classList.add("input-error")
+
+                // Quitar la clase de error después de 3 segundos
+                setTimeout(() => {
+                    document.getElementById("email")?.classList.remove("input-error")
+                }, 3000)
+
+                showAlert(
+                    "error",
+                    "Error de registro",
+                    "Este correo electrónico ya está registrado. Intenta iniciar sesión o usa otro correo.",
+                )
+            } else {
+                showAlert("error", "Error de registro", errorMessage)
+            }
         } finally {
             setLoading(false)
         }
@@ -67,11 +175,43 @@ const RegisterForm: React.FC = () => {
     const hasNumber = /[0-9]/.test(password)
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
 
+    // Función para renderizar el icono de la alerta según su tipo
+    const getAlertIcon = (type: AlertType) => {
+        switch (type) {
+            case "success":
+                return <CheckCircle className="alert-icon" size={20} />
+            case "error":
+                return <XCircle className="alert-icon" size={20} />
+            case "warning":
+                return <AlertCircle className="alert-icon" size={20} />
+            case "info":
+                return <Info className="alert-icon" size={20} />
+            default:
+                return <Info className="alert-icon" size={20} />
+        }
+    }
+
     return (
         <div
             className="auth-container"
             style={{ background: "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.1) 100%)" }}
         >
+            {/* Contenedor de alertas */}
+            <div className="alerts-container">
+                {alerts.map((alert) => (
+                    <div key={alert.id} className={`alert alert-${alert.type} ${alert.exiting ? "alert-exit" : ""}`}>
+                        {getAlertIcon(alert.type)}
+                        <div className="alert-content">
+                            <div className="alert-title">{alert.title}</div>
+                            <div className="alert-message">{alert.message}</div>
+                        </div>
+                        <button className="alert-close" onClick={() => removeAlert(alert.id)} aria-label="Cerrar alerta">
+                            <X size={16} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+
             <div className="login-card">
                 <div className="login-sidebar">
                     <div className="login-sidebar-content">
@@ -153,12 +293,15 @@ const RegisterForm: React.FC = () => {
                                 <Lock className="input-icon" size={18} />
                                 <input
                                     id="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="Crea una contraseña segura"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
+                                <button type="button" className="password-toggle-btn" onClick={togglePasswordVisibility} tabIndex={-1}>
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
 
                             {password && (
@@ -182,7 +325,14 @@ const RegisterForm: React.FC = () => {
                             )}
                         </div>
 
-                        {error && <div className="auth-error">{error}</div>}
+                        {error && (
+                            <div className="form-error-container">
+                                <div className="form-error-icon">
+                                    <AlertCircle size={18} />
+                                </div>
+                                <div className="form-error-message">{error}</div>
+                            </div>
+                        )}
 
                         <button type="submit" className="login-button" disabled={loading}>
                             {loading ? (
@@ -194,48 +344,6 @@ const RegisterForm: React.FC = () => {
                                 </>
                             )}
                         </button>
-
-                        {/*<div className="login-divider">
-                            <span>O regístrate con</span>
-                        </div>
-
-                        <div className="social-login">
-                            <button type="button" className="social-button google">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"></path>
-                                    <path d="M12 8L12 16"></path>
-                                    <path d="M8 12L16 12"></path>
-                                </svg>
-                                Google
-                            </button>
-                            <button type="button" className="social-button microsoft">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <rect width="10" height="10" x="3" y="3" rx="1"></rect>
-                                    <rect width="10" height="10" x="11" y="11" rx="1"></rect>
-                                </svg>
-                                Microsoft
-                            </button>
-                        </div>*/}
                     </form>
 
                     <div className="login-footer">
@@ -249,6 +357,5 @@ const RegisterForm: React.FC = () => {
         </div>
     )
 }
-
 export default RegisterForm
 

@@ -19,14 +19,14 @@ const Header: React.FC = () => {
             </div>
 
             <div className="header-right">
-                <button className="notification-btn">
+                {/*<button className="notification-btn">
                     <Bell size={18} />
                     <span className="notification-badge">3</span>
-                </button>
+                </button>*/}
                 <div className="user-profile">
                     <span className="user-initials">RV</span>
                     <div className="user-info">
-                        <span className="user-name">Rafael Villegas</span>
+                        <span className="user-name">Admin</span>
                         <span className="user-role">Administrador</span>
                     </div>
                 </div>

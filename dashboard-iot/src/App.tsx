@@ -8,8 +8,13 @@ import ChartsPage from "./components/ChartsPage"
 import DeleteParcPage from "./components/DeleteParcPage"
 import LoginForm from "./components/LoginForm"
 import RegisterForm from "./components/RegisterForm"
+import RecoverPasswordForm from "./components/RecoverPasswordForm"
+import ResetPasswordForm from "./components/ResetPasswordForm"
 import Footer from "./components/Footer"
 import { SidebarProvider } from "./context/SidebarContext"
+
+// Importar el nuevo componente AuthRoute
+import AuthRoute from "./components/auth-route"
 
 // Componente de layout condicional
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
@@ -17,7 +22,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const path = location.pathname
 
   // Rutas que no deben mostrar el layout completo
-  const noLayoutRoutes = ["/login", "/register"]
+  const noLayoutRoutes = ["/login", "/register", "/recover-password", "/reset-password"]
 
   // Verificar si la ruta actual está en la lista de rutas sin layout
   const shouldShowLayout = !noLayoutRoutes.includes(path)
@@ -54,9 +59,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 const DefaultRoute = () => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
-};
+  const isAuthenticated = localStorage.getItem("token") !== null
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
+}
 
 function App() {
   return (
@@ -70,17 +75,42 @@ function App() {
           <Route
             path="/login"
             element={
-              <AppLayout>
-                <LoginForm />
-              </AppLayout>
+              <AuthRoute>
+                <AppLayout>
+                  <LoginForm />
+                </AppLayout>
+              </AuthRoute>
             }
           />
           <Route
             path="/register"
             element={
-              <AppLayout>
-                <RegisterForm />
-              </AppLayout>
+              <AuthRoute>
+                <AppLayout>
+                  <RegisterForm />
+                </AppLayout>
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/recover-password"
+            element={
+              <AuthRoute>
+                <AppLayout>
+                  <RecoverPasswordForm />
+                </AppLayout>
+              </AuthRoute>
+            }
+          />
+
+          <Route
+            path="/reset-password"
+            element={
+              <AuthRoute>
+                <AppLayout>
+                  <ResetPasswordForm />
+                </AppLayout>
+              </AuthRoute>
             }
           />
 
@@ -119,9 +149,8 @@ function App() {
         </Routes>
       </div>
     </SidebarProvider>
-  );
+  )
 }
-
 
 export default App
 

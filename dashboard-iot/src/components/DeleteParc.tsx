@@ -20,6 +20,8 @@ interface Parcela {
     id: number
     nombre?: string
     parcela_nombre?: string // Algunos datos pueden venir con este nombre
+    ubicacion?: string
+    responsable?: string
     tipo_cultivo: string
     ultimo_riego?: string
     latitud: number | string
@@ -137,6 +139,13 @@ const DeleteParc: React.FC = () => {
                             </span>
                         </div>
 
+                        <div className="deleted-parcel-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <span>
+                                <strong>Responsable:</strong> {parcela.responsable || "No especificado"}
+                            </span>
+                        </div>
+
                         {parcela.ultimo_riego && (
                             <div className="deleted-parcel-info">
                                 <Calendar size={18} />
@@ -149,13 +158,9 @@ const DeleteParc: React.FC = () => {
                         <div className="deleted-parcel-info">
                             <MapPin size={18} />
                             <span>
-                                <strong>Ubicación:</strong> {formatCoord(parcela.latitud)}, {formatCoord(parcela.longitud)}
+                                <strong>Ubicación:</strong> {parcela.ubicacion || "No disponible"}
                             </span>
                         </div>
-                    </div>
-
-                    <div className="deleted-parcel-footer">
-                        <button className="restore-button">Restaurar parcela</button>
                     </div>
                 </div>
             ))}
